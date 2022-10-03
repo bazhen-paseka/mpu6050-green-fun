@@ -27,7 +27,7 @@
 
 	#include <string.h>
 	#include "stdio.h"
-//	#include "mpu6050.h"
+	#include "mpu6050.h"
 
 /* USER CODE END Includes */
 
@@ -48,6 +48,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+
+	MPU6050_t MPU6050;
 
 /* USER CODE END PM */
 
@@ -115,7 +117,7 @@ int main(void)
 	sprintf(debugString,"Connect and init MPU6050... " ) ;
 	UartDebug(debugString);
 
-//	while (MPU6050_Init(&hi2c1) == 1);
+	while (MPU6050_Init(&hi2c1) == 1);
 
 	sprintf(debugString,"successful!\r\n\r\n" ) ;
 	UartDebug(debugString);
@@ -126,16 +128,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  //MPU6050_Read_All(&hi2c1, &MPU6050);
-	  HAL_Delay(1000);
-//	  sprintf(debugString,"x.Raw -> %x\ty.Raw -> %x\tz.Raw -> %x\t ", MPU6050.Accel_X_RAW , MPU6050.Accel_Y_RAW , MPU6050.Accel_Z_RAW);
-//		UartDebug(debugString);
-//
-//	  sprintf(debugString,"x -> %fx\ty -> %fx\tz -> %fx\t \n\r", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
-//		UartDebug(debugString);
-	  sprintf(debugString,".");
-	  UartDebug(debugString);
-	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	MPU6050_Read_All(&hi2c1, &MPU6050);
+	HAL_Delay(100);
+	sprintf(debugString,"x.Raw -> %x\ty.Raw -> %x\tz.Raw -> %x\t ", MPU6050.Accel_X_RAW , MPU6050.Accel_Y_RAW , MPU6050.Accel_Z_RAW);
+	UartDebug(debugString);
+
+	sprintf(debugString,"x -> %fx\ty -> %fx\tz -> %fx\t \n\r", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
+	UartDebug(debugString);
+
+	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
 //	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, RESET);
 //	  HAL_Delay(20);
