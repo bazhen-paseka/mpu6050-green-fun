@@ -137,9 +137,9 @@ int main(void)
 	  UartDebug(debugString);
 	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
-	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, RESET);
-	  HAL_Delay(20);
-	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, SET);
+//	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, RESET);
+//	  HAL_Delay(20);
+//	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, SET);
 	  /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
