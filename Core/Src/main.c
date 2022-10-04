@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "iwdg.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -103,6 +104,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 
 	char		debugString[0XFF]	= { 0 } ;
@@ -114,14 +116,24 @@ int main(void)
 
 	I2C_ScanBusFlow(&hi2c1, &huart1);
 
-	sprintf(debugString,"Connect and init MPU6050... " ) ;
+	sprintf(debugString,"Connect to MPU6050... " ) ;
 	UartDebug(debugString);
 
 	while (MPU6050_Init(&hi2c1) == 1);
 
 	sprintf(debugString,"successful!\r\n\r\n" ) ;
 	UartDebug(debugString);
+	HAL_IWDG_Refresh( &hiwdg ) ;
 
+	for (uint8_t i=0; i<3; i++) {
+		HAL_GPIO_WritePin(BIP_GPIO_Port, BIP_Pin, RESET ) ;
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, RESET ) ;
+		HAL_Delay(50);
+		HAL_GPIO_WritePin(BIP_GPIO_Port, BIP_Pin, SET ) ;
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, SET ) ;
+		HAL_Delay(200);
+		HAL_IWDG_Refresh( &hiwdg ) ;
+	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,19 +141,39 @@ int main(void)
   while (1)
   {
 	MPU6050_Read_All(&hi2c1, &MPU6050);
+//	HAL_Delay(100);
+//	sprintf(debugString,"x.Raw -> %x\ty.Raw -> %x\tz.Raw -> %x\t ", MPU6050.Accel_X_RAW , MPU6050.Accel_Y_RAW , MPU6050.Accel_Z_RAW);
+//	UartDebug(debugString);
+//
+//	sprintf(debugString,"x -> %fx\ty -> %fx\tz -> %fx\t \n\r", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
+//	UartDebug(debugString);
+
 	HAL_Delay(100);
-	sprintf(debugString,"x.Raw -> %x\ty.Raw -> %x\tz.Raw -> %x\t ", MPU6050.Accel_X_RAW , MPU6050.Accel_Y_RAW , MPU6050.Accel_Z_RAW);
+	sprintf(debugString,"%f \t %f \t %f", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
 	UartDebug(debugString);
 
-	sprintf(debugString,"x -> %fx\ty -> %fx\tz -> %fx\t \n\r", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
+
+	int x_int = (int)( 100.0 * MPU6050.Ax ) ;
+	int y_int = (int)( 100.0 * MPU6050.Ay ) ;
+	int z_int = (int)( 100.0 * MPU6050.Az ) ;
+	int q_int = (x_int * x_int) + (y_int * y_int) + (z_int * z_int) ;
+
+	sprintf(debugString,"\t %d \t %d \t %d \t %d \r\n", x_int, y_int, z_int, q_int );
 	UartDebug(debugString);
 
-	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	if ( q_int != 0 ) {
+		HAL_IWDG_Refresh( &hiwdg ) ;
+	}
 
-//	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, RESET);
-//	  HAL_Delay(20);
-//	  HAL_GPIO_WritePin(BEEP_GPIO_Port,  BEEP_Pin, SET);
-	  /* USER CODE END WHILE */
+	if ((q_int > 0 ) && (q_int < 500 )) {
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, SET ) ;
+		HAL_GPIO_WritePin(BIP_GPIO_Port, BIP_Pin, RESET ) ;
+	} else {
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, RESET ) ;
+		HAL_GPIO_WritePin(BIP_GPIO_Port, BIP_Pin, SET ) ;
+	}
+
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -160,9 +192,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
