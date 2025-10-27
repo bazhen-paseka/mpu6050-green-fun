@@ -115,6 +115,9 @@ int main(void)
 	sprintf(debugString,"\tBuild: %s. Time: %s.\r\n" ,	DATE_as_int_str , TIME_as_int_str ) ;
 	UartDebug(debugString);
 
+	sprintf(debugString,"\tПоточний проєкт: %s\n", PROJECT_NAME);
+	UartDebug(debugString);
+
 	I2C_ScanBusFlow(&hi2c1, &huart1);
 
 	sprintf(debugString,"Connect to MPU6050... " ) ;
